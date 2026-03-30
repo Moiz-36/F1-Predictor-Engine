@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F1 Probability</title>
+    <style>
+        :root {
+            --f1-red: #e10600;
+            --panel-bg: #1f1f27;
+        }
+        body {
+            font-family: 'Titillium Web', sans-serif;
+            background: #15151e;
+            color: white;
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 3px solid var(--f1-red);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .status-bar {
+            display: flex;
+            gap: 20px;
+            font-weight: bold;
+        }
+        .sc-active {
+            color: #fff200;
+            animation: blink 1s infinite;
+        }
+        .driver-row {
+            display: flex;
+            align-items: center;
+            background: var(--panel-bg);
+            margin-bottom: 5px;
+            padding: 10px;
+            border-radius: 0 5px 5px 0;
+        }
+        .team-indicator {
+            width: 6px;
+            height: 40px;
+            margin-right: 15px;
+            border-radius: 2px;
+        }
+        .driver-info {
+            flex: 1;
+        }
+        .prob-box {
+            width: 300px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .bar-bg {
+            flex: 1;
+            background: #38383f;
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .bar-fill {
+            background: var(--f1-red);
+            height: 100%;
+            transition: width 0.8s ease-in-out;
+        }
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.2; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1 style="margin:0">F1 Probability</h1>
+            <div class="status-bar">
+                <div id="lap-info"></div>
+                <div id="sc-status"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="leaderboard"></div>
+    
+    <script>
+        async function update() {
+            try {
+                const res = await fetch("/state");
+                if (res.status == 202) return;
+                
+                const data = await res.json();
+                document.getElementById("lap-info").innerText = `LAP ${data.lap}/${data.total_laps}`;
+
+                let flagsHtml = "";
+                if (data.sc) flagsHtml += `<span class="sc-active">SAFETY CAR</span>`;
+                if (data.vsc) flagsHtml += `<span class="sc-active">VSC</span>`;
+                if (data.red) flagsHtml += `<span class="sc-active">RED FLAG</span>`;
+                document.getElementById("sc-status").innerHTML = flagsHtml;
+
+                const board = document.getElementById('leaderboard');
+                board.innerHTML = data.drivers.map(d => `
+                    <div class="driver-row">
+                        <div class="team-indicator" style="background: ${d.color}"></div>
+                        <div class="driver-info">
+                            <strong>P${d.position} ${d.name}</strong><br>
+                            <small style="color: #aaa">${d.team} | ${d.tyre_compound} (${d.tyre_age} Laps)</small>
+                        </div>
+                        <div class="prob-box">
+                            <span style="width: 50px; text-align: right;">${d.probability}%</span>
+                            <div class="bar-bg"><div class="bar-fill" style="width: ${d.probability}%"></div></div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) { 
+                console.error("Poll error:", err); 
+            }
+        }
+        
+        async function start() {
+            const session = prompt("Enter Session Key (e.g. 9158):", "9158");
+            const laps = prompt("Enter Total Laps:", "57");
+            
+            if (!session || !laps) return;
+            
+            const res = await fetch('/api/init', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ session_key: parseInt(session), total_laps: parseInt(laps) })
+            });
+            
+            if (res.ok) update();
+        }
+
+        setInterval(update, 5000);
+        start();
+    </script>
+</body>
+</html>
