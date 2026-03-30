@@ -1,4 +1,4 @@
-This is a live race dashboard built using vibe coding. Instead of spending weeks on manual boilerplate, I teamed up with Gemini to ship a functional, high-quality predictive engine in record time. It’s about building at the speed of thought.
+This is a live race dashboard built using vibe coding. Instead of spending weeks on manual boilerplate, I teamed up with Gemini and Claude to ship a functional, high-quality predictive engine in record time. It’s about building at the speed of thought.
 
 ✨ The Vibe
 AI-Augmented: Built with a "human-in-the-loop" approach to move fast and focus on the logic rather than the syntax.
